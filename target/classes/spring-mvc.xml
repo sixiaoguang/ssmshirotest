@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"  
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"  
+  xmlns:context="http://www.springframework.org/schema/context"  
+  xmlns:mvc="http://www.springframework.org/schema/mvc"  
+  xmlns:websocket="http://www.springframework.org/schema/websocket"  
+  xsi:schemaLocation="  
+    http://www.springframework.org/schema/beans   
+    http://www.springframework.org/schema/beans/spring-beans-4.0.xsd  
+    http://www.springframework.org/schema/context  
+    http://www.springframework.org/schema/context/spring-context-4.0.xsd  
+    http://www.springframework.org/schema/mvc  
+    http://www.springframework.org/schema/mvc/spring-mvc-4.0.xsd">  
+      
+    <!-- 添加注解驱动 -->   
+   <mvc:annotation-driven />  
+    <!-- 扫描controller（controller层注入） -->  
+   <context:component-scan base-package="com.test.controller"/>  
+     
+      <!-- 不拦截静态资源 -->
+       <!-- <mvc:resources location="/static/" mapping="/static/**"></mvc:resources> -->
+    
+     <!-- 避免IE在ajax请求时，返回json出现下载 -->  
+   <bean id="jacksonMessageConverter" class="org.springframework.http.converter.json.MappingJacksonHttpMessageConverter">       
+        <property name="supportedMediaTypes">  
+            <list>  
+                <value>text/html;charset=UTF-8</value>  
+            </list>  
+        </property>  
+    </bean>   
+    
+    
+   <!-- 对模型视图添加前后缀 -->  
+    <bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">     
+        <property name="prefix" value="/" />    
+        <property name="suffix" value=".jsp" />    
+    </bean> 
+       
+  	<bean class="org.springframework.web.servlet.handler.SimpleMappingExceptionResolver">  
+	    <property name="exceptionMappings">  
+	        <props>  
+	            <prop key="org.apache.shiro.authz.UnauthorizedException">/unauthorized</prop>  
+	            <prop key="org.apache.shiro.authz.UnauthenticatedException">/unauthenticated</prop>  
+	            <prop key="java.lang.ArithmeticException">/unarithmetic</prop> 
+	        </props>  
+	    </property>  
+	</bean>
+    <!-- add 20180912 -->
+        <!--  
+    4. 配置 LifecycleBeanPostProcessor. 可以自定的来调用配置在 Spring IOC 容器中 shiro bean 的生命周期方法. 
+    -->       
+    <bean id="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+
+    <!--  
+    5. 启用 IOC 容器中使用 shiro 的注解. 但必须在配置了 LifecycleBeanPostProcessor 之后才可以使用. 
+    -->     
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+    <bean class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+        <property name="securityManager" ref="securityManager"/>
+    </bean>   
+</beans>  
